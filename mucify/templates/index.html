@@ -173,12 +173,15 @@
 
   <section class="panel">
     <h2>Background music</h2>
-    <p class="lead">Play a track of your choice on a loop while Mucify is open. MP3 or FLAC.</p>
-    <div class="path-row"><input id="bgm-file" readonly placeholder="No file chosen">
-      <button class="btn" onclick="bgmChoose()">Choose file…</button>
+    <p class="lead">Play your own MP3 or FLAC music while Mucify is open. Pick one file to loop it, or a whole folder to shuffle everything in it.</p>
+    <div class="path-row"><input id="bgm-file" readonly placeholder="Nothing chosen">
+      <button class="btn" onclick="bgmChoose('file')">Choose file…</button>
+      <button class="btn" onclick="bgmChoose('folder')">Choose folder…</button>
       <button class="btn btn-ghost" onclick="bgmRemove()">Remove</button></div>
     <label class="switch-row"><input type="checkbox" id="bgm-enabled" onchange="bgmToggle(this.checked)"> <span>Play background music</span></label>
     <label>Volume <input type="range" id="bgm-volume" min="0" max="100" step="1" oninput="bgmVolume(this.value, false)" onchange="bgmVolume(this.value, true)"></label>
+    <div id="bgm-now" class="state-line none hidden"></div>
+    <button class="btn btn-ghost hidden" id="bgm-next" onclick="bgmNext()">⏭ Next track</button>
     <div id="bgm-msg" class="state-line"></div>
   </section>
 
