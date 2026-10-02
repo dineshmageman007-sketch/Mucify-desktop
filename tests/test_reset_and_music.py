@@ -141,6 +141,43 @@ class BackgroundMusicTests(unittest.TestCase):
         self.assertEqual(self.c.get("/api/bgmusic").status_code, 404)
         self.assertEqual(self.c.get("/api/settings").get_json()["app"]["bgm_path"], "")
 
+
+    # ---- folder (shuffle) mode
+    def _music_folder(self):
+        d = Path(tempfile.mkdtemp()) / "My Mix"
+        (d / "sub").mkdir(parents=True)
+        for rel, data in (("b.mp3", b"B" * 500), ("a.flac", b"A" * 500), ("sub/c.MP3", b"C" * 500),
+                          ("notes.txt", b"nope"), ("cover.jpg", b"img")):
+            (d / rel).write_bytes(data)
+        return d
+
+    def test_folder_lists_only_mp3_flac_including_subfolders(self):
+        d = self._music_folder()
+        r = self.c.post("/api/bgmusic/set", json={"path": str(d)}, headers=HDR).get_json()
+        self.assertEqual((r["ok"], r["kind"], r["count"]), (True, "folder", 3))
+        t = self.c.get("/api/bgmusic/tracks").get_json()
+        self.assertEqual(t["kind"], "folder")
+        self.assertEqual([x["name"] for x in t["tracks"]], ["a", "b", "c"])
+
+    def test_folder_tracks_are_served_by_index_only(self):
+        d = self._music_folder()
+        self.c.post("/api/bgmusic/set", json={"path": str(d)}, headers=HDR)
+        self.assertEqual(self.c.get("/api/bgmusic/track/0").data, b"A" * 500)
+        self.assertEqual(self.c.get("/api/bgmusic/track/2").mimetype, "audio/mpeg")
+        self.assertEqual(self.c.get("/api/bgmusic/track/3").status_code, 404)
+        self.assertEqual(self.c.get("/api/bgmusic/track/1", headers={"Range": "bytes=0-9"}).status_code, 206)
+        self.assertEqual(self.c.get("/api/bgmusic").status_code, 404)      # single-file route is not used in folder mode
+
+    def test_folder_without_music_is_rejected(self):
+        empty = Path(tempfile.mkdtemp()) / "Empty"; empty.mkdir(); (empty / "x.txt").write_text("x")
+        r = self.c.post("/api/bgmusic/set", json={"path": str(empty)}, headers=HDR)
+        self.assertEqual(r.status_code, 400)
+        self.assertEqual(self.c.get("/api/settings").get_json()["app"]["bgm_path"], "")
+
+    def test_single_file_still_reports_file_kind(self):
+        self.c.post("/api/bgmusic/set", json={"path": str(self._file("one.mp3"))}, headers=HDR)
+        self.assertEqual(self.c.get("/api/bgmusic/tracks").get_json()["kind"], "file")
+
     def test_file_dialog_filter_exists(self):
         self.assertIn("audio", backend.host.FILETYPES)
 
