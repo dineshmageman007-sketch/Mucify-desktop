@@ -188,6 +188,7 @@
       <div class="dropzone" id="pm-dz-add">Drop CSV(s) here, or click to upload</div>
       <input type="file" id="pm-file-add" multiple accept=".csv" class="hidden-input">
       <button class="btn" onclick="browseFiles('pm-add')">Browse… (select several)</button>
+      <button class="btn" onclick="libraryBackup()" title="Save your whole library as one CSV">⬇ Backup</button>
       <button class="btn btn-danger" onclick="playlistClear()">Clear Library</button>
       <div id="pm-add-log" class="log"></div>
       <h3>Sources fed in</h3>
@@ -234,7 +235,7 @@
   <button class="btn btn-ghost back-btn" onclick="showView('landing')">← Back</button>
   <h1>3 · Downloader</h1>
   <section class="panel">
-    <p class="lead">Feed in the enriched CSV (output of step 2).</p>
+    <p class="lead">Feed in the enriched CSV (output of step 2). When it finishes, the downloaded and not-downloaded lists are saved in the playlist's folder.</p>
     <div class="dropzone" id="dl-dz">Drop CSV here, or click to upload</div>
     <input type="file" id="dl-file" accept=".csv" class="hidden-input">
     <button class="btn" onclick="browseFiles('dl')">Browse…</button>
@@ -251,6 +252,9 @@
   </div>
   <div class="progress-track"><div class="progress-fill" id="dl-progress"></div></div>
   <div class="progress-label" id="dl-label">Ready</div>
+  <div id="dl-folder-actions" class="hidden" style="margin:8px 0 14px">
+    <button class="btn" onclick="openFolder(dlFolder)">📂 Open playlist folder</button>
+  </div>
 
   <div class="slow-panel" id="dl-slow-panel">
     <h3>⚠️ Skipped purely due to slow peers (<span id="dl-slow-count">0</span>)</h3>
@@ -281,5 +285,11 @@
 </main>
 
 <script src="/static/app.js"></script>
+<div id="recent-card" class="recent-card hidden" role="button" tabindex="0" onclick="useRecent()" onkeydown="if(event.key==='Enter')useRecent()">
+  <div class="recent-head"><span>🕘 <b id="recent-title">Last file</b></span>
+    <button class="recent-x" title="Hide" onclick="event.stopPropagation(); hideRecent()">✕</button></div>
+  <div class="recent-name" id="recent-name"></div>
+  <div class="recent-sub" id="recent-sub"></div>
+</div>
 </body>
 </html>
