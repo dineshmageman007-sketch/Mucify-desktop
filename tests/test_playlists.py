@@ -16,6 +16,11 @@ def write_csv(path, fieldnames, rows):
         w.writerows(rows)
 
 
+def same_path(a, b):
+    """Windows can name one folder two ways (C:\\Users\\RUNNER~1 vs C:\\Users\\runneradmin): compare the real location."""
+    return os.path.normcase(os.path.realpath(str(a))) == os.path.normcase(os.path.realpath(str(b)))
+
+
 def read_csv(path):
     with open(path, newline="", encoding="utf-8-sig") as f:
         return list(csv.DictReader(f))
@@ -66,8 +71,8 @@ class PlaylistFolderFlowTests(unittest.TestCase):
         self.assertTrue(saved.exists())
         self.assertEqual([x["Track Name"] for x in read_csv(saved)], ["New"])
         rec = self.c.get("/api/recent").get_json()
-        self.assertEqual(rec["to_download"]["path"], str(saved))
-        self.assertEqual(rec["source"]["path"], str(src))
+        self.assertTrue(same_path(rec["to_download"]["path"], saved))
+        self.assertTrue(same_path(rec["source"]["path"], src))
 
     def test_nothing_new_creates_no_folder(self):
         backend.save_library({"T1": {"Spotify Track Id": "T1", "Track Name": "Have"}})
@@ -84,7 +89,7 @@ class PlaylistFolderFlowTests(unittest.TestCase):
         out = projects.folder_for_input(self.wd, src)
         backend.qobuz_enrich_thread(str(src), str(out), 48000, 24, "2_enriched.csv")
         self.assertTrue((folder / "2_enriched.csv").exists())
-        self.assertEqual(self.c.get("/api/recent").get_json()["enriched"]["path"], str(folder / "2_enriched.csv"))
+        self.assertTrue(same_path(self.c.get("/api/recent").get_json()["enriched"]["path"], folder / "2_enriched.csv"))
 
 
 class DownloaderResultsTests(unittest.TestCase):
